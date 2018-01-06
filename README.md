@@ -1,5 +1,8 @@
 #DUMLFlasher
 
+Downloads:
+https://github.com/CunningLogic/DUMLFlasher/releases
+
 Experimental DUML client written in java. Licensed under GPLv3
 
 Only tested on the DJI Mavic Pro
