@@ -42,7 +42,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println("DUMLFlasher 1.0 - by jcase@cunninglogic.com");
+        System.out.println("DUMLFlasher 1.0.1 - by jcase@cunninglogic.com");
         System.out.println("Licensed under GPLV3\n");
 
         System.out.println("Want to help fund more public research?");
@@ -243,7 +243,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        System.arraycopy(md5,0, packet, 11, 16);
+        System.arraycopy(md5,0, packet, 12, 16);
 
         return  CRC.pktCRC(packet);
     }
