@@ -2,7 +2,6 @@ package com.cunninglogic.dumlflasher;
 
 import com.fazecast.jSerialComm.SerialPort;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.nntp.Threadable;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -10,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.zip.CRC32;
 
 /*
     This file is part of DUMLFlasher.
@@ -35,14 +33,12 @@ public class Main {
     private static SerialPort activePort = null;
     private static FTPClient ftpClient;
 
-    private static double VERSION = 1.0;
-
     private static boolean isRC = false;
-
+    private static boolean isGL = false;
 
     public static void main(String[] args) {
 
-        System.out.println("DUMLFlasher 1.0.1 - by jcase@cunninglogic.com");
+        System.out.println("DUMLFlasher 1.0.2 - by jcase@cunninglogic.com");
         System.out.println("Licensed under GPLV3\n");
 
         System.out.println("Want to help fund more public research?");
@@ -64,12 +60,13 @@ public class Main {
             return;
         }
 
+        System.out.println(args[0] + " Mode");
 
-        if (args[1].equals("RC")) {
-            System.out.println("RC Mode");
+        if (args[0].equals("RC")) {
             isRC = true;
-        } else {
-            System.out.println("AC Mode");
+
+        } else if (args[0].equals("GL")) {
+            isGL = true;
         }
 
         int count = 1;
@@ -145,10 +142,9 @@ public class Main {
 
         //ToDo handling reporting
         System.out.println("Enabling reporting");
-        write(getReportPacket());
+       // write(getReportPacket());
 
-        System.out.println("Sending FileSize packet");
-        write(getFileSizePacket(payload));
+
 
         System.out.println("Uploading payload");
         try {
@@ -156,6 +152,9 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println("Sending FileSize packet");
+        write(getFileSizePacket(payload));
 
         System.out.println("Starting flash");
         write(getHashPacket(payload));
@@ -180,7 +179,7 @@ public class Main {
             ftpClient.login("nouser","nopass");
             ftpClient.enterLocalPassiveMode();
         }
-
+        ftpClient.setFileType(ftpClient.BINARY_FILE_TYPE);
         InputStream is = Files.newInputStream(Paths.get(payload.getAbsolutePath()));
         boolean done = ftpClient.storeFile("/upgrade/dji_system.bin", is);
         is.close();
@@ -201,13 +200,14 @@ public class Main {
 
     private static byte[] getFileSizePacket(File payload) {
         byte[] packet = new byte[] {0x55, 0x1A, 0x04, (byte)0xB1, 0x2A, 0x28, 0x6B, 0x57, 0x40, 0x00, 0x08, 0x00,
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04};
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04};
 
         if (isRC) {
             packet = new byte[] {0x55, 0x1A, 0x04, (byte)0xB1, 0x2A, 0x2D, (byte)0xEC, 0x27, 0x40, 0x00, 0x08, 0x00,
-                    0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04};
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04};
+        } else if (isGL) {
+            packet = new byte[] {0x55, 0x1A, 0x04, (byte)0xB1, 0x2A, 0x3C, (byte)0xFD, 0x35, 0x40, 0x00, 0x08, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04};
         }
 
         byte[] size = ByteBuffer.allocate(4).putInt((int) payload.length()).array();
@@ -226,6 +226,9 @@ public class Main {
 
         if (isRC) {
             packet = new byte[] {0x55, 0x1E, 0x04, (byte)0x8A, 0x2A, 0x2D, 0x02, 0x28, 0x40, 0x00, 0x0A, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        } else if (isGL) {
+            packet = new byte[] {0x55, 0x1E, 0x04, (byte)0x8A, 0x2A, 0x3C, 0x5B, 0x36, 0x40, 0x00, 0x0A, 0x00,
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         }
 
@@ -256,6 +259,9 @@ public class Main {
         if (isRC) {
             packet = new byte[] {0x55, 0x16, 0x04, (byte)0xFC, 0x2A, 0x2D, (byte)0xE7, 0x27, 0x40, 0x00, 0x07, 0x00,
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, (byte)0x9F, 0x44};
+        } else if (isGL) {
+            packet = new byte[] {0x55, 0x16, 0x04, (byte)0xFC, 0x2A, 0x3C, (byte)0xF7, 0x35, 0x40, 0x00, 0x07, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x29};
         }
 
         return packet;
@@ -269,7 +275,10 @@ public class Main {
         if (isRC) {
             packet = new byte[] {0x55, 0x0E, 0x04, 0x66, 0x2A, 0x2D, (byte)0xEA, 0x27, 0x40, 0x00, 0x0C, 0x00, 0x2C,
                     (byte)0xC8};
+        } else if (isGL) {
+            packet = new byte[] {0x55, 0x0E, 0x04, 0x66, 0x2A, 0x3C, (byte)0xFA, 0x35, 0x40, 0x00, 0x0C, 0x00, 0x48, 0x02};
         }
+
         return packet;
     }
 
@@ -278,5 +287,6 @@ public class Main {
         System.out.println("Targets:");
         System.out.println("\tAC - Aircraft");
         System.out.println("\tRC - Remote Control");
+        System.out.println("\tGL - Goggles");
     }
 }

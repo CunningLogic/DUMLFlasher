@@ -11,7 +11,7 @@ Please see library licenses in lib/
 
 This client should be considered experimental. The author is not responsible for any losses or damage resulting from the use of this client.
 
-DUMLFlasher 1.0 - by jcase@cunninglogic.com
+DUMLFlasher 1.0.2 - by jcase@cunninglogic.com
 Licensed under GPLV3
 
 Want to help fund more public research?
